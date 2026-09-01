@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Community Emergency Response Platform (CERP)</title>
+
+    <!-- Google Fonts & FontAwesome Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Custom Style System -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body class="dark-theme">
+    <!-- Main App Layout Container -->
+    <div class="app-layout">
+
+        <!-- Top Header Navigation Bar -->
+        <header class="top-header">
+            <div class="header-brand">
+                <div class="brand-logo pulse-ring">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="brand-title">CERP <span class="badge-live">LIVE COMMAND</span></span>
+                    <span class="brand-subtitle">Greenfield Heights Emergency Response System</span>
+                </div>
+            </div>
+
+            <!-- Role Simulator & Quick Controls -->
+            <div class="header-controls">
+                <div class="role-selector-container">
+                    <label for="roleSelector"><i class="fa-solid fa-user-gear"></i> Active Role:</label>
+                    <select id="roleSelector" class="role-dropdown" onchange="switchRole(this.value)">
+                        <option value="RESIDENT">🏠 Resident (Elena Rostova)</option>
+                        <option value="SECURITY" selected>🛡️ Security Desk (Officer Marcus)</option>
+                        <option value="GUARDIAN">👨‍👩‍👧 Primary Guardian (Sarah Rostova)</option>
+                        <option value="ADMIN">⚡ System Admin</option>
+                    </select>
+                </div>
+
+                <div class="sound-toggle-container">
+                    <button id="soundToggleBtn" class="btn-icon" onclick="toggleSound()" title="Toggle Emergency Alarm Sound">
+                        <i class="fa-solid fa-volume-high"></i>
+                    </button>
+                </div>
+
+                <div class="user-profile-badge">
+                    <div class="avatar-circle" id="userAvatar">M</div>
+                    <div class="user-meta">
+                        <span class="user-name" id="userName">Officer Marcus Vance</span>
+                        <span class="user-role-label" id="userRoleLabel">Security Personnel</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-body-container">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <nav class="nav-menu">
+                    <button class="nav-item active" data-view="command-center" onclick="navigateTo('command-center')">
+                        <i class="fa-solid fa-tower-broadcast"></i>
+                        <span>Command Center</span>
+                        <span class="nav-badge alert-count-badge" id="navActiveCount">0</span>
+                    </button>
+                    <button class="nav-item" data-view="sos-trigger" onclick="navigateTo('sos-trigger')">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <span>Resident SOS Trigger</span>
+                        <span class="nav-badge pulse-red">SOS</span>
+                    </button>
+                    <button class="nav-item" data-view="incident-dispatch" onclick="navigateTo('incident-dispatch')">
+                        <i class="fa-solid fa-truck-medical"></i>
+                        <span>Incidents & Dispatch</span>
+                    </button>
+                    <button class="nav-item" data-view="analytics" onclick="navigateTo('analytics')">
+                        <i class="fa-solid fa-chart-line"></i>
+                        <span>Analytics & Stats</span>
+                    </button>
+                    <button class="nav-item" data-view="directory" onclick="navigateTo('directory')">
+                        <i class="fa-solid fa-address-book"></i>
+                        <span>Emergency Directory</span>
+                    </button>
+                    <button class="nav-item" data-view="chat" onclick="navigateTo('chat')">
+                        <i class="fa-solid fa-comments"></i>
+                        <span>Community Chat</span>
+                    </button>
+                </nav>
+
+                <!-- System Heartbeat Card -->
+                <div class="sidebar-status-card">
+                    <div class="status-indicator">
+                        <span class="status-dot green-blink"></span>
+                        <span class="status-text">Network Mesh Active</span>
+                    </div>
+                    <div class="system-time" id="systemClock">00:00:00</div>
+                    <div class="sub-info">CELERY & CHANNELS: READY</div>
+                </div>
+            </aside>
+
+            <!-- Dynamic Content Area -->
+            <main class="content-area">
+
+                <!-- Emergency Banner (Visible when active SOS exists) -->
+                <div class="emergency-alert-banner" id="globalEmergencyBanner" style="display: none;">
+                    <div class="banner-icon-pulse">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <div class="banner-details">
+                        <div class="banner-title"><span id="bannerCategory">MEDICAL EMERGENCY</span> IN PROGRESS</div>
+                        <div class="banner-message" id="bannerMessage">Elena Rostova (Flat A-101) requested immediate assistance.</div>
+                    </div>
+                    <div class="banner-actions">
+                        <button class="btn btn-danger-glow" onclick="navigateTo('command-center')">
+                            <i class="fa-solid fa-eye"></i> Triage Alert
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View 1: Command Center (Live Alert Triage) -->
+                <section id="view-command-center" class="view-panel active">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-tower-broadcast"></i> Live Emergency Command Center</h2>
+                            <p class="section-desc">Real-time triage of incoming community SOS alerts, guardian escalation timers, and active response status.</p>
+                        </div>
+                        <div class="panel-header-actions">
+                            <button class="btn btn-outline" onclick="fetchSOSAlerts()">
+                                <i class="fa-solid fa-arrows-rotate"></i> Refresh Feed
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quick Overview Counters -->
+                    <div class="stats-grid-compact">
+                        <div class="stat-card red-border">
+                            <div class="stat-icon red"><i class="fa-solid fa-circle-exclamation"></i></div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="cntOpenAlerts">0</span>
+                                <span class="stat-label">Open Alerts</span>
+                            </div>
+                        </div>
+                        <div class="stat-card amber-border">
+                            <div class="stat-icon amber"><i class="fa-solid fa-person-running"></i></div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="cntActiveAlerts">0</span>
+                                <span class="stat-label">Active Responses</span>
+                            </div>
+                        </div>
+                        <div class="stat-card purple-border">
+                            <div class="stat-icon purple"><i class="fa-solid fa-bolt"></i></div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="cntEscalatedAlerts">0</span>
+                                <span class="stat-label">Escalated Alerts</span>
+                            </div>
+                        </div>
+                        <div class="stat-card emerald-border">
+                            <div class="stat-icon emerald"><i class="fa-solid fa-circle-check"></i></div>
+                            <div class="stat-data">
+                                <span class="stat-value" id="cntResolvedAlerts">0</span>
+                                <span class="stat-label">Resolved Today</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="filter-bar">
+                        <div class="tab-group">
+                            <button class="tab-btn active" data-filter="ALL" onclick="filterAlerts('ALL', this)">All Incidents</button>
+                            <button class="tab-btn" data-filter="ACTIVE" onclick="filterAlerts('ACTIVE', this)">Active / Open</button>
+                            <button class="tab-btn" data-filter="MEDICAL" onclick="filterAlerts('MEDICAL', this)">Medical</button>
+                            <button class="tab-btn" data-filter="SECURITY" onclick="filterAlerts('SECURITY', this)">Security</button>
+                            <button class="tab-btn" data-filter="FIRE" onclick="filterAlerts('FIRE', this)">Fire</button>
+                            <button class="tab-btn" data-filter="RESOLVED" onclick="filterAlerts('RESOLVED', this)">Resolved</button>
+                        </div>
+                    </div>
+
+                    <!-- Alert Cards Feed Container -->
+                    <div class="alerts-feed-container" id="alertsFeed">
+                        <div class="loading-spinner">
+                            <i class="fa-solid fa-circle-notch fa-spin"></i> Fetching emergency feeds...
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View 2: Resident SOS Trigger Portal -->
+                <section id="view-sos-trigger" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-triangle-exclamation"></i> Resident One-Tap SOS Panic Button</h2>
+                            <p class="section-desc">Instantly alert security, medical volunteers, and primary guardians with single-click location broadcast.</p>
+                        </div>
+                    </div>
+
+                    <div class="sos-portal-grid">
+                        <!-- Main Panic Button Area -->
+                        <div class="glass-card sos-panic-card text-center">
+                            <div class="panic-button-wrapper">
+                                <button id="sosTriggerButton" class="main-sos-btn" onclick="triggerOneTapSOS()">
+                                    <div class="sos-inner">
+                                        <i class="fa-solid fa-hand"></i>
+                                        <span class="sos-text">HOLD / TAP SOS</span>
+                                        <span class="sos-sub">EMERGENCY BROADCAST</span>
+                                    </div>
+                                    <div class="radar-pulse"></div>
+                                </button>
+                            </div>
+                            <p class="sos-warning-note"><i class="fa-solid fa-shield-cat"></i> Pressing SOS dispatches security gate & sends automated SMS alerts to your primary guardian.</p>
+                        </div>
+
+                        <!-- SOS Settings & Category Options -->
+                        <div class="glass-card sos-form-card">
+                            <h3><i class="fa-solid fa-list-check"></i> Emergency Parameters</h3>
+                            <form id="sosForm" onsubmit="event.preventDefault(); triggerCustomSOS();">
+                                <div class="form-group">
+                                    <label>Emergency Category</label>
+                                    <div class="category-pill-grid">
+                                        <label class="category-pill active">
+                                            <input type="radio" name="sosCategory" value="MEDICAL" checked>
+                                            <i class="fa-solid fa-heart-pulse"></i> Medical
+                                        </label>
+                                        <label class="category-pill">
+                                            <input type="radio" name="sosCategory" value="SECURITY">
+                                            <i class="fa-solid fa-user-shield"></i> Security
+                                        </label>
+                                        <label class="category-pill">
+                                            <input type="radio" name="sosCategory" value="FIRE">
+                                            <i class="fa-solid fa-fire-extinguisher"></i> Fire
+                                        </label>
+                                        <label class="category-pill">
+                                            <input type="radio" name="sosCategory" value="FALL">
+                                            <i class="fa-solid fa-person-falling"></i> Fall / Injury
+                                        </label>
+                                        <label class="category-pill">
+                                            <input type="radio" name="sosCategory" value="NATURAL_DISASTER">
+                                            <i class="fa-solid fa-cloud-bolt"></i> Disaster
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="sosMessageInput">Specific Details / Symptoms (Optional)</label>
+                                    <textarea id="sosMessageInput" class="form-control" rows="3" placeholder="e.g. Severe chest pain, kitchen smoke, intruder near balcony..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Location & Flat Address</label>
+                                    <input type="text" id="sosLocationInput" class="form-control" value="Flat A-101, 1st Floor, Block A, Greenfield Heights" readonly>
+                                </div>
+
+                                <button type="submit" class="btn btn-danger-glow w-100">
+                                    <i class="fa-solid fa-paper-plane"></i> Broadcast Emergency Alert
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- My Recent Alerts List -->
+                    <div class="glass-card mt-4">
+                        <h3><i class="fa-solid fa-clock-rotate-left"></i> My Recent SOS Requests</h3>
+                        <div id="myAlertsList" class="my-alerts-list">
+                            <p class="text-muted">Loading resident profile requests...</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View 3: Incident Response & Dispatch -->
+                <section id="view-incident-dispatch" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-truck-medical"></i> Response Dispatch & Responder Roster</h2>
+                            <p class="section-desc">Manage on-duty security guards, medical volunteers, and active dispatch logs.</p>
+                        </div>
+                    </div>
+
+                    <div class="dispatch-grid">
+                        <!-- Active Responders List -->
+                        <div class="glass-card">
+                            <h3><i class="fa-solid fa-users-gear"></i> On-Duty Security & Volunteers</h3>
+                            <div class="responder-roster" id="responderRoster">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Incident Log Timeline -->
+                        <div class="glass-card">
+                            <h3><i class="fa-solid fa-route"></i> Live Dispatch Audit Log</h3>
+                            <div class="dispatch-timeline" id="dispatchTimeline">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View 4: Analytics & Stats -->
+                <section id="view-analytics" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-chart-line"></i> Emergency Incident Analytics</h2>
+                            <p class="section-desc">Performance metrics, response speed distribution, and incident categorizations.</p>
+                        </div>
+                    </div>
+
+                    <div class="analytics-grid">
+                        <div class="glass-card">
+                            <h3>Category Distribution</h3>
+                            <div class="chart-box">
+                                <canvas id="categoryChart" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                        <div class="glass-card">
+                            <h3>Status Resolution Ratio</h3>
+                            <div class="chart-box">
+                                <canvas id="statusChart" width="300" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View 5: Emergency Directory & Announcements -->
+                <section id="view-directory" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-address-book"></i> Emergency Directory & Announcements</h2>
+                            <p class="section-desc">Verified contact numbers for police, medical, fire stations, and gate security.</p>
+                        </div>
+                    </div>
+
+                    <div class="directory-grid">
+                        <div class="glass-card">
+                            <h3><i class="fa-solid fa-bullhorn"></i> Society Announcements</h3>
+                            <div id="announcementsList" class="announcements-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <div class="glass-card">
+                            <h3><i class="fa-solid fa-phone-flip"></i> Verified Emergency Helplines</h3>
+                            <div id="directoryList" class="directory-list">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- View 6: Community Chat Room -->
+                <section id="view-chat" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <h2><i class="fa-solid fa-comments"></i> Emergency Command Chat Room</h2>
+                            <p class="section-desc">Real-time messaging room for responders, security team, and residents.</p>
+                        </div>
+                    </div>
+
+                    <div class="chat-container glass-card">
+                        <div class="chat-messages-area" id="chatMessagesArea">
+                            <div class="chat-message system">
+                                <div class="msg-content">Welcome to the Emergency Response Command Chat. All interactions are logged.</div>
+                            </div>
+                        </div>
+                        <div class="chat-input-bar">
+                            <input type="text" id="chatMessageInput" class="form-control" placeholder="Type response note or update..." onkeypress="if(event.key==='Enter') sendChatMessage()">
+                            <button class="btn btn-primary" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i> Send</button>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal Dialog: Assign Responder -->
+    <div class="modal-overlay" id="assignModal" style="display: none;">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3>Assign Responder to SOS Alert #<span id="assignAlertId">--</span></h3>
+                <button class="btn-icon" onclick="closeModal('assignModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Select an available security officer or medical volunteer to dispatch:</p>
+                <select id="assignResponderSelect" class="form-control">
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('assignModal')">Cancel</button>
+                <button class="btn btn-primary" onclick="submitAssignResponder()">Confirm Dispatch</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Dialog: Resolve SOS Alert -->
+    <div class="modal-overlay" id="resolveModal" style="display: none;">
+        <div class="modal-card glass-card">
+            <div class="modal-header">
+                <h3>Resolve SOS Alert #<span id="resolveAlertId">--</span></h3>
+                <button class="btn-icon" onclick="closeModal('resolveModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="resolutionNotes">Resolution Summary & Action Taken Notes</label>
+                    <textarea id="resolutionNotes" class="form-control" rows="4" placeholder="Enter findings, medical aid rendered, or false alarm cause..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="closeModal('resolveModal')">Cancel</button>
+                <button class="btn btn-success-glow" onclick="submitResolveAlert()">Mark Resolved</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Script -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
