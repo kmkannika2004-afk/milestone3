@@ -600,3 +600,237 @@ function formatTimestamp(ts) {
     const date = new Date(ts);
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
+
+/* -------------------------------------------------------------------------- */
+/* Module 1: Escalation Workflow Timer & Controls                             */
+/* -------------------------------------------------------------------------- */
+
+let escalationTimer = null;
+let secondsLeft = 60;
+
+function startEscalationSimulation() {
+    clearInterval(escalationTimer);
+    secondsLeft = 60;
+    
+    const timerText = document.getElementById('escalationTimerText');
+    const primaryNode = document.getElementById('nodePrimaryGuardian');
+    const secondaryNode = document.getElementById('nodeSecondaryGuardian');
+    const contactsNode = document.getElementById('nodeEmergencyContacts');
+
+    if (primaryNode) primaryNode.className = 'escalation-node-card active';
+    if (secondaryNode) secondaryNode.className = 'escalation-node-card';
+    if (contactsNode) contactsNode.className = 'escalation-node-card';
+
+    escalationTimer = setInterval(() => {
+        secondsLeft--;
+        if (timerText) {
+            timerText.innerText = `00:${secondsLeft < 10 ? '0' : ''}${secondsLeft}`;
+        }
+
+        if (secondsLeft <= 0) {
+            clearInterval(escalationTimer);
+            if (primaryNode) primaryNode.className = 'escalation-node-card';
+            if (secondaryNode) secondaryNode.className = 'escalation-node-card active';
+
+            // Add log entry
+            addEscalationLogRow('INC-20250828-001', 'Sarah Rostova', 'Secondary Guardian', 'Timer Expiry (60s)', 'ESCALATED');
+        }
+    }, 1000);
+}
+
+function triggerManualEscalationStep() {
+    clearInterval(escalationTimer);
+    const secondaryNode = document.getElementById('nodeSecondaryGuardian');
+    const contactsNode = document.getElementById('nodeEmergencyContacts');
+
+    if (secondaryNode && !secondaryNode.classList.contains('active')) {
+        secondaryNode.className = 'escalation-node-card active';
+        addEscalationLogRow('INC-20250828-001', 'Sarah Rostova', 'Secondary Guardian', 'Manual Escalate', 'ESCALATED');
+    } else if (contactsNode) {
+        contactsNode.className = 'escalation-node-card active';
+        addEscalationLogRow('INC-20250828-001', 'Sarah Rostova', 'Emergency Contacts', 'Manual Escalate', 'BROADCAST');
+    }
+
+    // Call API
+    apiFetch('/response/escalations/manual-escalate/', {
+        method: 'POST',
+        body: JSON.stringify({
+            alert_id: allAlerts[0]?.id || 1,
+            escalate_to: 'SECONDARY',
+            notes: 'Manually escalated from UI Command Panel'
+        })
+    }).catch(err => console.warn('Manual escalate API dispatched:', err));
+}
+
+function simulateGuardianResponse() {
+    clearInterval(escalationTimer);
+    const primaryNode = document.getElementById('nodePrimaryGuardian');
+    if (primaryNode) {
+        primaryNode.querySelector('.node-status-badge').innerText = 'ACKNOWLEDGED';
+        primaryNode.querySelector('.node-status-badge').className = 'node-status-badge status-waiting text-success';
+    }
+    const timerText = document.getElementById('escalationTimerText');
+    if (timerText) timerText.innerText = 'ACKNOWLEDGED';
+}
+
+function addEscalationLogRow(incId, guardian, level, cause, status) {
+    const tableBody = document.querySelector('#escalationLogTable tbody');
+    if (!tableBody) return;
+
+    const row = document.createElement('tr');
+    row.innerHTML = `
+        <td>${incId}</td>
+        <td>${guardian}</td>
+        <td><span class="badge-pill pill-secondary">${level}</span></td>
+        <td>${cause}</td>
+        <td><span class="status-badge ${status}">${status}</span></td>
+        <td>${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
+    `;
+    tableBody.prepend(row);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Module 2: Community Assistance Handlers                                   */
+/* -------------------------------------------------------------------------- */
+
+async function toggleVolunteerAvailability(isAvailable) {
+    const label = document.getElementById('availabilityStatusLabel');
+    if (label) {
+        label.innerText = isAvailable ? 'Available' : 'Unavailable';
+        label.className = `availability-status-label ${isAvailable ? 'green' : 'text-danger'}`;
+    }
+
+    try {
+        await apiFetch('/volunteers/availability/', {
+            method: 'PATCH',
+            body: JSON.stringify({
+                availability_status: isAvailable ? 'AVAILABLE' : 'OFFLINE'
+            })
+        });
+    } catch (e) {
+        console.warn('Availability API request sent:', e);
+    }
+}
+
+function updateCurrentLocation() {
+    const badge = document.getElementById('myCoordsBadge');
+    if (badge) {
+        badge.innerText = `📍 Lat: 12.971650, Lng: 77.594680 (Updated)`;
+        badge.style.color = '#2ed573';
+    }
+}
+
+function openAssignModalForLatest() {
+    if (allAlerts.length > 0) {
+        openAssignModal(allAlerts[0].id);
+    } else {
+        openAssignModal(1);
+    }
+}
+
+async function acceptIncident(alertId) {
+    const card = document.getElementById('nearbyIncidentCard');
+    if (card) {
+        card.innerHTML = `
+            <div class="nearby-header">
+                <span class="distance-pill"><i class="fa-solid fa-check"></i> ASSIGNED TO YOU</span>
+                <span class="category-badge medical">Active Response</span>
+            </div>
+            <h4 class="incident-title">Elena Rostova — Flat A-101</h4>
+            <p class="incident-msg"><i class="fa-solid fa-person-running text-success"></i> You accepted this incident dispatch. En route with ETA 4 mins.</p>
+            <div class="responder-actions-row">
+                <button class="btn btn-success-glow btn-lg flex-1" disabled><i class="fa-solid fa-check-double"></i> Accepted & En Route</button>
+            </div>
+        `;
+    }
+
+    try {
+        await apiFetch(`/sos/alerts/${alertId || 1}/respond/`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'EN_ROUTE',
+                notes: 'Volunteer accepted nearby incident dispatch'
+            })
+        });
+        fetchSOSAlerts(false);
+    } catch (e) {
+        console.warn('Accept incident API call:', e);
+    }
+}
+
+async function rejectIncident(alertId) {
+    const card = document.getElementById('nearbyIncidentCard');
+    if (card) {
+        card.innerHTML = `
+            <div class="nearby-header">
+                <span class="distance-pill text-danger"><i class="fa-solid fa-xmark"></i> DECLINED</span>
+                <span class="category-badge">Re-routing</span>
+            </div>
+            <h4 class="incident-title">Elena Rostova — Flat A-101</h4>
+            <p class="incident-msg text-muted">Incident rejected. Dispatch requested next available security guard.</p>
+        `;
+    }
+
+    try {
+        await apiFetch(`/sos/alerts/${alertId || 1}/respond/`, {
+            method: 'POST',
+            body: JSON.stringify({
+                action: 'UNABLE',
+                notes: 'Volunteer unable to respond at this time'
+            })
+        });
+    } catch (e) {
+        console.warn('Reject incident API call:', e);
+    }
+}
+
+function focusNearbyIncident(alertId) {
+    navigateTo('community-assistance');
+}
+
+/* -------------------------------------------------------------------------- */
+/* Module 3: Smartphone Chat Handlers                                        */
+/* -------------------------------------------------------------------------- */
+
+function sendMobileChatMessage() {
+    const input = document.getElementById('mobileChatInput');
+    const feed = document.getElementById('mobileChatFeed');
+    if (!input || !input.value.trim()) return;
+
+    const msg = input.value.trim();
+    input.value = '';
+
+    const roleTagClass = currentRole.toLowerCase() + '-tag';
+    const roleAvatarClass = currentRole.toLowerCase();
+    const roleLetter = currentRole.charAt(0);
+    const roleLabel = currentRole.charAt(0) + currentRole.slice(1).toLowerCase();
+
+    const row = document.createElement('div');
+    row.className = `chat-bubble-row ${currentRole.toLowerCase()}-msg`;
+    row.innerHTML = `
+        <div class="avatar-badge ${roleAvatarClass}">${roleLetter}</div>
+        <div class="bubble-content">
+            <div class="sender-tag ${roleTagClass}">${roleLabel}</div>
+            <div class="msg-text">${msg}</div>
+            <div class="msg-time">${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+        </div>
+    `;
+
+    feed.appendChild(row);
+    feed.scrollTop = feed.scrollHeight;
+
+    // Send API call
+    apiFetch('/communication/messages/', {
+        method: 'POST',
+        body: JSON.stringify({
+            room: 1,
+            content: msg
+        })
+    }).catch(e => console.warn('Chat message API:', e));
+}
+
+function switchChatChannel(channelName) {
+    document.querySelectorAll('.service-pill-btn').forEach(btn => btn.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+}
+

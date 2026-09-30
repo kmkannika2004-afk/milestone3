@@ -1,0 +1,23 @@
+{
+  "short_name": "CERP Mobile",
+  "name": "Community Emergency Response Platform",
+  "icons": [
+    {
+      "src": "/pwa-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/pwa-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#090d16",
+  "theme_color": "#ff4757",
+  "display": "standalone",
+  "orientation": "portrait",
+  "description": "Real-time emergency SOS broadcast and community response platform"
+}

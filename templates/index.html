@@ -67,26 +67,30 @@
                         <span>Command Center</span>
                         <span class="nav-badge alert-count-badge" id="navActiveCount">0</span>
                     </button>
+                    <button class="nav-item" data-view="escalation-workflow" onclick="navigateTo('escalation-workflow')">
+                        <i class="fa-solid fa-diagram-project"></i>
+                        <span>1. Escalation Workflow</span>
+                    </button>
+                    <button class="nav-item" data-view="community-assistance" onclick="navigateTo('community-assistance')">
+                        <i class="fa-solid fa-hand-holding-hand"></i>
+                        <span>2. Community Assistance</span>
+                    </button>
+                    <button class="nav-item" data-view="communication-services" onclick="navigateTo('communication-services')">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                        <span>3. Communication Services</span>
+                    </button>
+                    <button class="nav-item" data-view="incident-lifecycle" onclick="navigateTo('incident-lifecycle')">
+                        <i class="fa-solid fa-timeline"></i>
+                        <span>4. Incident Lifecycle</span>
+                    </button>
                     <button class="nav-item" data-view="sos-trigger" onclick="navigateTo('sos-trigger')">
                         <i class="fa-solid fa-triangle-exclamation"></i>
                         <span>Resident SOS Trigger</span>
                         <span class="nav-badge pulse-red">SOS</span>
                     </button>
-                    <button class="nav-item" data-view="incident-dispatch" onclick="navigateTo('incident-dispatch')">
-                        <i class="fa-solid fa-truck-medical"></i>
-                        <span>Incidents & Dispatch</span>
-                    </button>
-                    <button class="nav-item" data-view="analytics" onclick="navigateTo('analytics')">
-                        <i class="fa-solid fa-chart-line"></i>
-                        <span>Analytics & Stats</span>
-                    </button>
                     <button class="nav-item" data-view="directory" onclick="navigateTo('directory')">
                         <i class="fa-solid fa-address-book"></i>
-                        <span>Emergency Directory</span>
-                    </button>
-                    <button class="nav-item" data-view="chat" onclick="navigateTo('chat')">
-                        <i class="fa-solid fa-comments"></i>
-                        <span>Community Chat</span>
+                        <span>Directory & Helplines</span>
                     </button>
                 </nav>
 
@@ -182,6 +186,454 @@
                     <div class="alerts-feed-container" id="alertsFeed">
                         <div class="loading-spinner">
                             <i class="fa-solid fa-circle-notch fa-spin"></i> Fetching emergency feeds...
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Module 1: Escalation Workflow -->
+                <section id="view-escalation-workflow" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <span class="module-tag tag-red">1. ESCALATION WORKFLOW</span>
+                            <h2><i class="fa-solid fa-diagram-project"></i> Guardian Escalation Workflow</h2>
+                            <p class="section-desc">Escalate when there is no response.</p>
+                        </div>
+                    </div>
+
+                    <div class="escalation-workflow-container glass-card mb-4">
+                        <div class="workflow-header-row">
+                            <h3><i class="fa-solid fa-shield-heart"></i> Multi-Tier Escalation Pipeline</h3>
+                            <div class="timer-badge-box">
+                                <i class="fa-regular fa-clock"></i> Escalation Timer Window: <span id="escalationTimerText" class="countdown-text">00:60</span>
+                            </div>
+                        </div>
+
+                        <!-- 3 Step Flow diagram matching image -->
+                        <div class="escalation-flow-grid">
+                            <div class="escalation-node-card active" id="nodePrimaryGuardian">
+                                <div class="node-avatar"><i class="fa-solid fa-user-nurse"></i></div>
+                                <h4>Primary Guardian</h4>
+                                <p class="node-desc"><i class="fa-regular fa-clock"></i> Wait for response (e.g., 60 seconds)</p>
+                                <span class="node-status-badge status-waiting">ACTIVE WAITING</span>
+                            </div>
+
+                            <div class="flow-arrow-connector">
+                                <span class="arrow-label">No response</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+
+                            <div class="escalation-node-card" id="nodeSecondaryGuardian">
+                                <div class="node-avatar"><i class="fa-solid fa-user-shield"></i></div>
+                                <h4>Secondary Guardian</h4>
+                                <p class="node-desc"><i class="fa-solid fa-bolt"></i> Escalate automatically</p>
+                                <span class="node-status-badge status-pending">PENDING</span>
+                            </div>
+
+                            <div class="flow-arrow-connector">
+                                <span class="arrow-label">No response</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </div>
+
+                            <div class="escalation-node-card" id="nodeEmergencyContacts">
+                                <div class="node-avatar"><i class="fa-solid fa-phone-volume"></i></div>
+                                <h4>Emergency Contacts</h4>
+                                <p class="node-desc"><i class="fa-solid fa-bullhorn"></i> Notify emergency contacts</p>
+                                <span class="node-status-badge status-pending">BROADCAST</span>
+                            </div>
+                        </div>
+
+                        <div class="workflow-actions-bar">
+                            <button class="btn btn-outline" onclick="startEscalationSimulation()">
+                                <i class="fa-solid fa-play"></i> Start 60s Simulation
+                            </button>
+                            <button class="btn btn-warning-glow" onclick="triggerManualEscalationStep()">
+                                <i class="fa-solid fa-forward-step"></i> Force Auto-Escalate Now
+                            </button>
+                            <button class="btn btn-success-glow" onclick="simulateGuardianResponse()">
+                                <i class="fa-solid fa-check-double"></i> Simulate Guardian Response
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Escalation Audit Log Table -->
+                    <div class="glass-card">
+                        <h3><i class="fa-solid fa-list-ul"></i> Escalation History Log</h3>
+                        <div class="table-responsive">
+                            <table class="custom-table" id="escalationLogTable">
+                                <thead>
+                                    <tr>
+                                        <th>Incident ID</th>
+                                        <th>Primary Guardian</th>
+                                        <th>Escalation Level</th>
+                                        <th>Trigger Cause</th>
+                                        <th>Status</th>
+                                        <th>Timestamp</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>INC-20250828-001</td>
+                                        <td>Sarah Rostova</td>
+                                        <td><span class="badge-pill pill-primary">Primary Guardian</span></td>
+                                        <td>Timer Expiry (60s)</td>
+                                        <td><span class="status-badge ACTIVE">IN PROGRESS</span></td>
+                                        <td>5:30 PM</td>
+                                    </tr>
+                                    <tr>
+                                        <td>INC-20250828-002</td>
+                                        <td>David Chen</td>
+                                        <td><span class="badge-pill pill-secondary">Secondary Guardian</span></td>
+                                        <td>Auto Escalated</td>
+                                        <td><span class="status-badge ESCALATED">ESCALATED</span></td>
+                                        <td>5:31 PM</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Module 2: Community Assistance Management -->
+                <section id="view-community-assistance" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <span class="module-tag tag-green">2. COMMUNITY ASSISTANCE MANAGEMENT</span>
+                            <h2><i class="fa-solid fa-hand-holding-hand"></i> Community Assistance Management</h2>
+                            <p class="section-desc">Enable volunteers and security to respond.</p>
+                        </div>
+                    </div>
+
+                    <!-- Top Controls Bar -->
+                    <div class="assistance-controls-bar glass-card mb-4">
+                        <div class="roles-badges-group">
+                            <span class="role-chip volunteer"><i class="fa-solid fa-user-doctor"></i> Volunteer</span>
+                            <span class="role-chip security"><i class="fa-solid fa-shield-halved"></i> Security</span>
+                            <span class="role-chip guardian"><i class="fa-solid fa-user-nurse"></i> Guardian</span>
+                        </div>
+
+                        <div class="quick-controls-right">
+                            <!-- Set Availability Toggle -->
+                            <div class="availability-toggle-box">
+                                <span class="control-label">Set Availability:</span>
+                                <label class="switch-toggle">
+                                    <input type="checkbox" id="availabilityToggle" checked onchange="toggleVolunteerAvailability(this.checked)">
+                                    <span class="slider round"></span>
+                                </label>
+                                <span class="availability-status-label green" id="availabilityStatusLabel">Available</span>
+                            </div>
+
+                            <!-- Share Location -->
+                            <button class="btn btn-outline" onclick="updateCurrentLocation()">
+                                <i class="fa-solid fa-location-dot text-danger"></i> Share Location
+                            </button>
+
+                            <!-- Responder Assignment -->
+                            <button class="btn btn-primary" onclick="openAssignModalForLatest()">
+                                <i class="fa-solid fa-user-plus"></i> Responder Assignment
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Nearby Incidents Container (Map + Incident Cards) -->
+                    <div class="assistance-grid">
+                        <!-- Nearby Incidents Map Container -->
+                        <div class="glass-card nearby-map-card">
+                            <div class="card-header-flex">
+                                <h3><i class="fa-solid fa-map-location-dot"></i> View Nearby Incidents</h3>
+                                <span class="location-coords-badge" id="myCoordsBadge">📍 Lat: 12.971600, Lng: 77.594600</span>
+                            </div>
+
+                            <div class="vector-map-simulation">
+                                <div class="map-grid-overlay"></div>
+                                <div class="map-pin-marker main-user-pin" style="top: 55%; left: 48%;" title="You are here">
+                                    <i class="fa-solid fa-street-view"></i>
+                                    <span class="pin-tooltip">My Current Location</span>
+                                </div>
+                                <div class="map-pin-marker incident-pin pulse-ring" style="top: 38%; left: 62%;" onclick="focusNearbyIncident(1)">
+                                    <div class="incident-callout">
+                                        <i class="fa-solid fa-heart-pulse"></i>
+                                        <div class="callout-text">
+                                            <strong>Medical Emergency</strong>
+                                            <span>450 m away</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="map-pin-marker sec-pin" style="top: 70%; left: 30%;">
+                                    <i class="fa-solid fa-shield-halved"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Incident Action Card (Accept / Reject) -->
+                        <div class="glass-card nearby-action-card">
+                            <h3><i class="fa-solid fa-bell-concierge"></i> Incident Dispatch Triage</h3>
+                            <div id="nearbyIncidentCard" class="nearby-incident-details">
+                                <div class="nearby-header">
+                                    <span class="distance-pill"><i class="fa-solid fa-person-walking"></i> 450 m away</span>
+                                    <span class="category-badge medical">Medical Emergency</span>
+                                </div>
+                                <h4 class="incident-title">Elena Rostova — Flat A-101</h4>
+                                <p class="incident-msg">"Severe shortness of breath and sudden chest pressure. Need medical volunteer immediately."</p>
+
+                                <div class="responder-actions-row">
+                                    <button class="btn btn-success-glow btn-lg flex-1" onclick="acceptIncident(1)">
+                                        <i class="fa-solid fa-circle-check"></i> Accept Incident
+                                    </button>
+                                    <button class="btn btn-danger-glow btn-lg flex-1" onclick="rejectIncident(1)">
+                                        <i class="fa-solid fa-circle-xmark"></i> Reject Incident
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Key APIs Summary Footnote -->
+                            <div class="key-apis-box mt-4">
+                                <div class="api-label"><i class="fa-solid fa-code"></i> Key APIs Integrated</div>
+                                <div class="api-pills">
+                                    <code>GET .../availability</code>
+                                    <code>PUT .../availability</code>
+                                    <code>POST .../accept-incident</code>
+                                    <code>POST .../reject-incident</code>
+                                    <code>PUT .../location</code>
+                                    <code>GET .../assignments</code>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Module 3: Communication Services -->
+                <section id="view-communication-services" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <span class="module-tag tag-purple">3. COMMUNICATION SERVICES</span>
+                            <h2><i class="fa-solid fa-mobile-screen-button"></i> Communication Services</h2>
+                            <p class="section-desc">Real-time communication between all involved users.</p>
+                        </div>
+                    </div>
+
+                    <div class="communication-layout-grid">
+                        <!-- Mobile Phone Mockup Container matching Image -->
+                        <div class="phone-frame-wrapper">
+                            <div class="smartphone-device">
+                                <div class="phone-speaker"></div>
+                                <div class="phone-screen">
+                                    <!-- Mobile Header Bar -->
+                                    <div class="phone-app-header">
+                                        <button class="btn-icon-sm"><i class="fa-solid fa-chevron-left"></i></button>
+                                        <div class="header-chat-info">
+                                            <div class="chat-room-title">Incident Chat</div>
+                                            <div class="chat-room-sub">INC-20250828-001</div>
+                                        </div>
+                                        <button class="btn-icon-sm"><i class="fa-solid fa-ellipsis-vertical"></i></button>
+                                    </div>
+
+                                    <!-- Mobile Chat Messages Stream -->
+                                    <div class="phone-chat-messages" id="mobileChatFeed">
+                                        <!-- Resident Message -->
+                                        <div class="chat-bubble-row resident-msg">
+                                            <div class="avatar-badge resident">R</div>
+                                            <div class="bubble-content">
+                                                <div class="sender-tag resident-tag">Resident</div>
+                                                <div class="msg-text">I need help near Block A.</div>
+                                                <div class="msg-time">5:22 PM</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Volunteer Message -->
+                                        <div class="chat-bubble-row volunteer-msg">
+                                            <div class="avatar-badge volunteer">V</div>
+                                            <div class="bubble-content">
+                                                <div class="sender-tag volunteer-tag">Volunteer</div>
+                                                <div class="msg-text">I am coming, ETA 5 minutes.</div>
+                                                <div class="msg-time">5:33 PM</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Security Message -->
+                                        <div class="chat-bubble-row security-msg">
+                                            <div class="avatar-badge security">S</div>
+                                            <div class="bubble-content">
+                                                <div class="sender-tag security-tag">Security</div>
+                                                <div class="msg-text">I have reached the entrance.</div>
+                                                <div class="msg-time">5:35 PM</div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Guardian Message -->
+                                        <div class="chat-bubble-row guardian-msg">
+                                            <div class="avatar-badge guardian">G</div>
+                                            <div class="bubble-content">
+                                                <div class="sender-tag guardian-tag">Guardian</div>
+                                                <div class="msg-text">Thank you. Keep me updated.</div>
+                                                <div class="msg-time">5:36 PM</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Phone Chat Input Footer -->
+                                    <div class="phone-input-footer">
+                                        <input type="text" id="mobileChatInput" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendMobileChatMessage()">
+                                        <button class="send-btn" onclick="sendMobileChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Navigation Pills & Service Tools -->
+                        <div class="communication-tools-card glass-card">
+                            <h3><i class="fa-solid fa-comments"></i> Quick Service Channels</h3>
+                            <p class="text-muted mb-3">Seamless real-time channel switching between emergency stakeholders.</p>
+
+                            <div class="service-pills-grid">
+                                <button class="service-pill-btn active" onclick="switchChatChannel('EMERGENCY_CHAT')">
+                                    <div class="pill-icon purple"><i class="fa-solid fa-comment-dots"></i></div>
+                                    <span>Emergency Chat</span>
+                                </button>
+                                <button class="service-pill-btn" onclick="switchChatChannel('RESPONSE_UPDATES')">
+                                    <div class="pill-icon amber"><i class="fa-solid fa-file-pen"></i></div>
+                                    <span>Response Updates</span>
+                                </button>
+                                <button class="service-pill-btn" onclick="switchChatChannel('INCIDENT_DISCUSSION')">
+                                    <div class="pill-icon green"><i class="fa-solid fa-people-group"></i></div>
+                                    <span>Incident Discussion</span>
+                                </button>
+                                <button class="service-pill-btn" onclick="switchChatChannel('CONTACT_DIRECTORY')">
+                                    <div class="pill-icon blue"><i class="fa-solid fa-address-book"></i></div>
+                                    <span>Contact Directory</span>
+                                </button>
+                            </div>
+
+                            <div class="channel-status-box mt-4">
+                                <h4><i class="fa-solid fa-circle-nodes"></i> Active Live Socket Channel</h4>
+                                <div class="socket-info">
+                                    <span class="status-dot green-blink"></span>
+                                    <span>Channel: <code>ws://localhost:8000/ws/chat/INC-20250828-001/</code></span>
+                                </div>
+                                <p class="text-dim mt-2">All incoming messages are broadcasted instantly to guards, guardians, and medical volunteers on duty.</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Module 4: Incident Lifecycle Management -->
+                <section id="view-incident-lifecycle" class="view-panel">
+                    <div class="panel-header">
+                        <div>
+                            <span class="module-tag tag-blue">4. INCIDENT LIFECYCLE MANAGEMENT</span>
+                            <h2><i class="fa-solid fa-timeline"></i> Incident Lifecycle Management</h2>
+                            <p class="section-desc">Track the incident from response to closure.</p>
+                        </div>
+                    </div>
+
+                    <!-- 5 Lifecycle State Cards matching Image -->
+                    <div class="lifecycle-pipeline-grid">
+                        <div class="lifecycle-stage-card stage-open">
+                            <div class="stage-header">
+                                <div class="stage-icon blue"><i class="fa-regular fa-clock"></i></div>
+                                <span class="stage-badge badge-open">OPEN</span>
+                            </div>
+                            <h4>Incident Created</h4>
+                            <p>Incident created, waiting for response</p>
+                        </div>
+
+                        <div class="lifecycle-stage-card stage-active">
+                            <div class="stage-header">
+                                <div class="stage-icon green"><i class="fa-solid fa-person-running"></i></div>
+                                <span class="stage-badge badge-active">ACTIVE RESPONSE</span>
+                            </div>
+                            <h4>Responder Accepted</h4>
+                            <p>Responder accepted and on the way</p>
+                        </div>
+
+                        <div class="lifecycle-stage-card stage-escalated">
+                            <div class="stage-header">
+                                <div class="stage-icon amber"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                                <span class="stage-badge badge-escalated">ESCALATED</span>
+                            </div>
+                            <h4>Time Window Timeout</h4>
+                            <p>No response within time window</p>
+                        </div>
+
+                        <div class="lifecycle-stage-card stage-resolved">
+                            <div class="stage-header">
+                                <div class="stage-icon emerald"><i class="fa-solid fa-circle-check"></i></div>
+                                <span class="stage-badge badge-resolved">RESOLVED</span>
+                            </div>
+                            <h4>Assistance Complete</h4>
+                            <p>Assistance completed</p>
+                        </div>
+
+                        <div class="lifecycle-stage-card stage-closed">
+                            <div class="stage-header">
+                                <div class="stage-icon purple"><i class="fa-solid fa-lock"></i></div>
+                                <span class="stage-badge badge-closed">CLOSED</span>
+                            </div>
+                            <h4>Closed Documented</h4>
+                            <p>Incident closed with documentation</p>
+                        </div>
+                    </div>
+
+                    <!-- Incident History Example Timeline matching Image -->
+                    <div class="glass-card mt-4">
+                        <div class="card-header-flex">
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Incident History (Example)</h3>
+                            <span class="incident-ref-code">Ref: INC-20250828-001</span>
+                        </div>
+
+                        <div class="incident-history-timeline" id="incidentHistoryTimeline">
+                            <div class="history-event-item">
+                                <div class="event-bullet blue"></div>
+                                <div class="event-time">5:30 PM</div>
+                                <div class="event-details">
+                                    <strong>Incident created (SOS)</strong>
+                                    <span>Elena Rostova (Flat A-101) triggered emergency alert</span>
+                                </div>
+                            </div>
+
+                            <div class="history-event-item">
+                                <div class="event-bullet green"></div>
+                                <div class="event-time">5:31 PM</div>
+                                <div class="event-details">
+                                    <strong>Guardian notified</strong>
+                                    <span>Automated SMS and Push notification sent to Sarah Rostova</span>
+                                </div>
+                            </div>
+
+                            <div class="history-event-item">
+                                <div class="event-bullet green"></div>
+                                <div class="event-time">5:34 PM</div>
+                                <div class="event-details">
+                                    <strong>Volunteer accepted</strong>
+                                    <span>Dr. Anita Roy accepted dispatch assignment (ETA 5 mins)</span>
+                                </div>
+                            </div>
+
+                            <div class="history-event-item">
+                                <div class="event-bullet green"></div>
+                                <div class="event-time">5:38 PM</div>
+                                <div class="event-details">
+                                    <strong>Responder arrived</strong>
+                                    <span>Officer Marcus & Dr. Anita Roy checked in at Flat A-101</span>
+                                </div>
+                            </div>
+
+                            <div class="history-event-item">
+                                <div class="event-bullet green"></div>
+                                <div class="event-time">5:45 PM</div>
+                                <div class="event-details">
+                                    <strong>Incident resolved</strong>
+                                    <span>Medical aid administered. Patient oxygen stabilized</span>
+                                </div>
+                            </div>
+
+                            <div class="history-event-item">
+                                <div class="event-bullet blue"></div>
+                                <div class="event-time">5:50 PM</div>
+                                <div class="event-details">
+                                    <strong>Incident closed</strong>
+                                    <span>Closed with formal report filed by Officer Marcus</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
